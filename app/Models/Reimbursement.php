@@ -27,4 +27,14 @@ class Reimbursement extends Model
         'updated_by',
         'project',
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'submitted_by');
+    }
 }

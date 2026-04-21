@@ -47,11 +47,9 @@ class CategoryController extends Controller
             ]);
         }
 
-        // $data->fill($request->only(['name']));
-        $data->name = $request->name ?? $data->name;
-        $data->save();
-
-        if ($data->save()) {
+        if ($data->update([
+            'name' => $request->name ?? $data->name
+        ])) {
             return response()->json([
                 'status' => 200,
                 'message' => 'Sukses update role user',

@@ -17,7 +17,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Reimburse
-Route::get('/reimburse', [ReimbursementController::class, 'getReimburse']);
+// Route::get('/reimburse', [ReimbursementController::class, 'getReimburse']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // Admin level
@@ -37,4 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Reimburse
     Route::post('/reimburse', [ReimbursementController::class, 'reqReimburse']);
+    Route::get('/reimburse', [ReimbursementController::class, 'getReimburse']);
+    Route::get('/{reimburse_id}/reimburse', [ReimbursementController::class, 'ReimburseSpec']);
+    Route::post('/reimburse/{reimburse_id}/update', [ReimbursementController::class, 'getReimburse']);
 });
