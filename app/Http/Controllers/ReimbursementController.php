@@ -114,6 +114,12 @@ class ReimbursementController extends Controller
     public function ReimburseSpec($reimburse_id)
     {
         $data = Reimbursement::where('id', $reimburse_id)->first();
+        if (!$data) {
+            return response()->json([
+                'status' => 404,
+                'message' => 'Data tidak ditemukan'
+            ]);
+        }
 
         return response()->json([
             'status' => 200,

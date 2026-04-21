@@ -73,8 +73,9 @@ class UserLevelController extends Controller
             ]);
         }
 
-        $data->admin_level_id = $request->admin_level_id ?? $data->admin_level_id;
-        $data->save();
+        // $data->admin_level_id = $request->admin_level_id ?? $data->admin_level_id;
+        $data->admin_level_id = $request->role_id ?? $data->admin_level_id;
+        // $data->save();
 
         if ($data->save()) {
             return response()->json([

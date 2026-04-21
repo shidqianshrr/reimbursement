@@ -29,7 +29,7 @@ class CategoryController extends Controller
 
     public function getCategory()
     {
-        $data = Category::select('*')->get();
+        $data = Category::all();
 
         return response()->json([
             'status' => 200,
