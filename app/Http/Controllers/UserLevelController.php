@@ -11,27 +11,20 @@ class UserLevelController extends Controller
 {
     public function addUsertoAdmin(Request $request)
     {
-        $exist = UserLevel::where('user_id', $request->user_id)->where('admin_level_id', $request->role_id)->first();
+        $exist = UserLevel::where('user_id', $request->user_id)
+            ->where('admin_level_id', $request->role_id)
+            ->first();
+
         if ($exist) {
-            return response()->json(['status' => 400, 'message' => 'User sudah mempunyai role tersebut']);
+            return response()->json(['status' => 400, 'message' => 'User sudah mempunyai role tersebut'], 400);
         }
 
-        $user = User::find($request->user_id);
-        if (!$user) {
-            return response()->json(['status' => 404, 'message' => 'User tidak ditemukan']);
-        }
-
-        $role = AdminLevel::find($request->role_id);
-        if (!$role) {
-            return response()->json(['status' => 404, 'message' => 'Role tidak ditemukan']);
-        }
-
-        $data = new UserLevel([
-            'user_id' => $user->id,
-            'admin_level_id' => $role->id
+        $data = UserLevel::create([
+            'user_id' => $request->user_id,
+            'admin_level_id' => $request->role_id
         ]);
 
-        if ($data->save()) {
+        if ($data) {
             return response()->json([
                 'status' => 200,
                 'message' => 'Sukses memberikan user sebuah role',
@@ -45,9 +38,42 @@ class UserLevelController extends Controller
         ], 400);
     }
 
-    public function getlistUserAdmin()
+    public function getlistUserAdmin(Request $request)
     {
-        $data = UserLevel::with(['user', 'role'])->get();
+        $limit = ($request->input('limit') != null) ? $request->input('limit') : 0;
+        $offset = ($request->input('offset') != null) ? $request->input('offset') : 0;
+        
+        $filter = json_decode($request->input('filter'));
+        if ($filter == null) {
+            $filter = json_decode(urldecode($request->input('filter')));
+        }
+        
+        $sort = json_decode(urldecode($request->input('sort')));
+
+        $query = UserLevel::with(['user', 'role']);
+
+        // Filter
+        if ($filter) {
+            foreach ($filter as $key => $value) {
+                if ($value !== null && $value !== '') {
+                    $query->where($key, $value);
+                }
+            }
+        }
+
+        // Sort
+        if ($sort) {
+            foreach ($sort as $key => $value) {
+                $query->orderBy($key, $value);
+            }
+        }
+
+        // Pagination
+        if ($limit > 0) {
+            $query->limit($limit)->offset($offset);
+        }
+
+        $data = $query->get();
 
         return response()->json([
             'status' => 200,
@@ -62,20 +88,10 @@ class UserLevelController extends Controller
             return response()->json([
                 'status' => 404,
                 'message' => 'Data tidak ditemukan'
-            ]);
+            ], 404);
         }
 
-        $role = AdminLevel::find($request->role_id);
-        if (!$role) {
-            return response()->json([
-                'status' => 404,
-                'message' => 'Role tidak ditemukan'
-            ]);
-        }
-
-        // $data->admin_level_id = $request->admin_level_id ?? $data->admin_level_id;
         $data->admin_level_id = $request->role_id ?? $data->admin_level_id;
-        // $data->save();
 
         if ($data->save()) {
             return response()->json([

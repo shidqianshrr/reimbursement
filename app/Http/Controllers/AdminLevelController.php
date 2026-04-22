@@ -3,33 +3,60 @@
 namespace App\Http\Controllers;
 
 use App\Models\AdminLevel;
-use Illuminate\Support\Facades\Hash;
-use DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB as FacadesDB;
 use Illuminate\Http\Request;
 
 class AdminLevelController extends Controller
 {
     public function AddadminUser(Request $request)
     {
-        $role_user = $request->input('role_user');
-        $description = $request->input('description');
-
-        $data = new AdminLevel([
-            'role_user' => $role_user,
-            'description' => $description,
+        $data = AdminLevel::create([
+            'role_user' => $request->role_user,
+            'description' => $request->description,
         ]);
 
-        if ($data->save()) {
-            return response()->json(['status' => 200, 'message' => 'Sukses menambahkan Admin User']);
-        } else
-            return response()->json(['status' => 400, 'message' => 'Gagal menambahkan Admin User']);
+        if ($data) {
+            return response()->json(['status' => 200, 'message' => 'Sukses menambahkan Admin User', 'result' => $data]);
+        }
+
+        return response()->json(['status' => 400, 'message' => 'Gagal menambahkan Admin User'], 400);
     }
 
-    public function getAdminUser()
+    public function getAdminUser(Request $request)
     {
-        $data = AdminLevel::select('*')->get();
+        $limit = ($request->input('limit') != null) ? $request->input('limit') : 0;
+        $offset = ($request->input('offset') != null) ? $request->input('offset') : 0;
+        
+        $filter = json_decode($request->input('filter'));
+        if ($filter == null) {
+            $filter = json_decode(urldecode($request->input('filter')));
+        }
+        
+        $sort = json_decode(urldecode($request->input('sort')));
+
+        $query = AdminLevel::query();
+
+        // Filter
+        if ($filter) {
+            foreach ($filter as $key => $value) {
+                if ($value !== null && $value !== '') {
+                    $query->where($key, $value);
+                }
+            }
+        }
+
+        // Sort
+        if ($sort) {
+            foreach ($sort as $key => $value) {
+                $query->orderBy($key, $value);
+            }
+        }
+
+        // Pagination
+        if ($limit > 0) {
+            $query->limit($limit)->offset($offset);
+        }
+
+        $data = $query->get();
 
         return response()->json([
             'status' => 200,
@@ -42,15 +69,16 @@ class AdminLevelController extends Controller
     {
         $role = AdminLevel::find($level_id);
         if (!$role) {
-            return response()->json(['status' => 404, 'message' => 'Role admin tidak ditemukan']);
+            return response()->json(['status' => 404, 'message' => 'Role admin tidak ditemukan'], 404);
         }
 
         $role->role_user = $request->role_user ?? $role->role_user;
         $role->description = $request->description ?? $role->description;
 
-        if ($role->update()) {
-            return response()->json(['status' => 200, 'message' => 'Sukses update Admin User']);
-        } else
-            return response()->json(['status' => 400, 'message' => 'Gagal update Admin User']);
+        if ($role->save()) {
+            return response()->json(['status' => 200, 'message' => 'Sukses update Admin User', 'result' => $role]);
+        }
+
+        return response()->json(['status' => 400, 'message' => 'Gagal update Admin User'], 400);
     }
 }
