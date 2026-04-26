@@ -19,6 +19,16 @@ class UserLevelController extends Controller
             return response()->json(['status' => 400, 'message' => 'User sudah mempunyai role tersebut'], 400);
         }
 
+        $user = User::where('id', $request->user_id)->first();
+        if (!$user) {
+            return response()->json(['status' => 404, 'message' => 'User tidak ditemukan'], 404);
+        }
+
+        $admin = AdminLevel::where('id', $request->role_id)->first();
+        if (!$admin) {
+            return response()->json(['status' => 404, 'message' => 'Admin level tidak ditemukan'], 404);
+        }
+
         $data = UserLevel::create([
             'user_id' => $request->user_id,
             'admin_level_id' => $request->role_id
@@ -42,12 +52,12 @@ class UserLevelController extends Controller
     {
         $limit = ($request->input('limit') != null) ? $request->input('limit') : 0;
         $offset = ($request->input('offset') != null) ? $request->input('offset') : 0;
-        
+
         $filter = json_decode($request->input('filter'));
         if ($filter == null) {
             $filter = json_decode(urldecode($request->input('filter')));
         }
-        
+
         $sort = json_decode(urldecode($request->input('sort')));
 
         $query = UserLevel::with(['user', 'role']);
@@ -91,7 +101,21 @@ class UserLevelController extends Controller
             ], 404);
         }
 
-        $data->admin_level_id = $request->role_id ?? $data->admin_level_id;
+        if ($request->filled('role_id')) {
+            $admin = AdminLevel::where('id', $request->role_id)->first();
+            if (!$admin) {
+                return response()->json(['status' => 404, 'message' => 'Admin level tidak ditemukan'], 404);
+            }
+            $data->admin_level_id = $request->role_id;
+        }
+
+        if ($request->filled('user_id')) {
+            $user = User::where('id', $request->user_id)->first();
+            if (!$user) {
+                return response()->json(['status' => 404, 'message' => 'User tidak ditemukan'], 404);
+            }
+            $data->user_id = $request->user_id;
+        }
 
         if ($data->save()) {
             return response()->json([

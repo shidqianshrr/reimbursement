@@ -18,7 +18,7 @@ return new class extends Migration
             $table->decimal('amount', 15, 2);
 
             $table->bigInteger('category_id');
-            $table->bigInteger('user_id');
+            // $table->bigInteger('user_id');
 
             $table->string('status')->default('pending');
 
